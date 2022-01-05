@@ -3,12 +3,17 @@
 pragma solidity ^0.6.6;
 
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Lottery is Ownable {
+contract Lottery is VRFConsumerBase, Ownable {
     address payable[] public players;
+    address payable public recentWinner;
+    uint256 public randomness;
     uint256 internal usdEntryFee;
     AggregatorV3Interface internal ethUsdPriceFeed;
+    uint256 public fee;
+    bytes32 public keyHash;
 
     enum LOTTERY_STATE {
         OPEN,
@@ -17,10 +22,17 @@ contract Lottery is Ownable {
     }
     LOTTERY_STATE lottery_state;
 
-    constructor(address _priceFeedAddress) public {
+    constructor(address _priceFeedAddress,
+        address _vrfCoordinator,
+        address _linkAddress,
+        uint256 _fee,
+        bytes32 _keyHash)
+    public VRFConsumerBase(_vrfCoordinator, _linkAddress)  {
         usdEntryFee = 50 * (10 ** 18);
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         lottery_state = LOTTERY_STATE.CLOSED;
+        fee = _fee;
+        keyHash = _keyHash;
     }
     /**
      * user enters lottery by paying minimal entrance fee
@@ -45,13 +57,15 @@ contract Lottery is Ownable {
      * only admin can start the lottery
      */
     function startLottery() public onlyOwner {
-        require(lottery_state == LOTTERY_STATE.CLOSED, "Cannot start a new lottery yet!");
+        require(lottery_state == LOTTERY_STATE.CLOSED, "Cannot start a new lottery - when state is not closed!");
 
     }
     /**
      * only admin ends the lottery and a random user gets the pot
      */
     function endLottery() public onlyOwner {
+        require(lottery_state == LOTTERY_STATE.OPEN, "Cannot end lottery - state need to be open!");
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK");
         //uint rand = uint(keccak256
         //    (abi.encodePacked(
         //            nonce, //nonce is predictable (aka, transaction number)
@@ -61,5 +75,20 @@ contract Lottery is Ownable {
         //        )
         //    )
         //) % players.length;
+        lottery_state == LOTTERY_STATE.CALCULATING_WINNER;
+        bytes32 requestId = requestRandomness(keyHash, fee);
+    }
+
+    function fulfillRandomness(bytes32 requestId, uint256 _randomness)
+    internal override {
+        require(lottery_state == LOTTERY_STATE.CALCULATING_WINNER, "You are not there yet");
+        require(_randomness > 0, "Random number not found");
+        randomness = _randomness;
+        uint256 index_of_winner = randomness % players.length;
+        recentWinner = players[index_of_winner];
+        recentWinner.transfer(address(this).balance);
+        // reset the lottery
+        players = new address payable[](0);
+        lottery_state == LOTTERY_STATE.CLOSED;
     }
 }
