@@ -41,8 +41,25 @@ contract Lottery is Ownable {
         return constToEnter;
     }
 
-    // admin can start the lotter
-    function startLottery() public {}
-    // admin ends the lottery and a random user gets the pot
-    function endLottery() public {}
+    /**
+     * only admin can start the lottery
+     */
+    function startLottery() public onlyOwner {
+        require(lottery_state == LOTTERY_STATE.CLOSED, "Cannot start a new lottery yet!");
+
+    }
+    /**
+     * only admin ends the lottery and a random user gets the pot
+     */
+    function endLottery() public onlyOwner {
+        //uint rand = uint(keccak256
+        //    (abi.encodePacked(
+        //            nonce, //nonce is predictable (aka, transaction number)
+        //            msg.sender, // msg.sender is predictable
+        //            block.difficulty, // can actually be manipulated by the miners
+        //            block.timestamp //timestamp is predictable
+        //        )
+        //    )
+        //) % players.length;
+    }
 }
