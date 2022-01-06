@@ -63,7 +63,7 @@ def fund_with_link(contract_address, account=None, link_token=None, amount=0.1 *
     link_token = link_token if link_token else get_contract("link_token")
     link_token_contract = interface.LinkTokenInterface(link_token.address)
     link_balance = Web3.fromWei(link_token_contract.balanceOf(account), "ether")
-    print(f"Balance of Link in account {account} = {link_balance}")
+    # print(f"Balance of Link in account {account} = {link_balance}")
     tx = link_token_contract.transfer(contract_address, amount, {"from": account})
     tx.wait(1)
     print("The contract has been funded")

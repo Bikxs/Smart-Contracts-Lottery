@@ -14,13 +14,13 @@ contract Lottery is VRFConsumerBase, Ownable {
     AggregatorV3Interface internal ethUsdPriceFeed;
     uint256 public fee;
     bytes32 public keyHash;
-
+    event RequestRandomness(bytes32 requestId);
     enum LOTTERY_STATE {
         OPEN,
         CLOSED,
         CALCULATING_WINNER
     }
-    LOTTERY_STATE lottery_state;
+    LOTTERY_STATE public lottery_state;
 
     constructor(address _priceFeedAddress,
         address _vrfCoordinator,
@@ -28,7 +28,7 @@ contract Lottery is VRFConsumerBase, Ownable {
         uint256 _fee,
         bytes32 _keyHash)
     public VRFConsumerBase(_vrfCoordinator, _linkAddress)  {
-        usdEntryFee = 50 * (10**18);
+        usdEntryFee = 50 * (10 ** 18);
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         lottery_state = LOTTERY_STATE.CLOSED;
         fee = _fee;
@@ -47,9 +47,9 @@ contract Lottery is VRFConsumerBase, Ownable {
      */
     function getEntranceFee() public view returns (uint256) {
         (,int price,,,) = ethUsdPriceFeed.latestRoundData();
-        uint256 adjustedPrice = uint256(price) * 10**10;
+        uint256 adjustedPrice = uint256(price) * 10 ** 10;
         //now has 18 decimals
-        uint256 constToEnter = (usdEntryFee * 10**18) / adjustedPrice;
+        uint256 constToEnter = (usdEntryFee * 10 ** 18) / adjustedPrice;
         return constToEnter;
     }
 
@@ -75,8 +75,9 @@ contract Lottery is VRFConsumerBase, Ownable {
         //        )
         //    )
         //) % players.length;
-        lottery_state == LOTTERY_STATE.CALCULATING_WINNER;
+        lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
         bytes32 requestId = requestRandomness(keyHash, fee);
+        emit RequestRandomness(requestId);
     }
 
     function fulfillRandomness(bytes32 requestId, uint256 _randomness)
@@ -89,6 +90,6 @@ contract Lottery is VRFConsumerBase, Ownable {
         recentWinner.transfer(address(this).balance);
         // reset the lottery
         players = new address payable[](0);
-        lottery_state == LOTTERY_STATE.CLOSED;
+        lottery_state = LOTTERY_STATE.CLOSED;
     }
 }
