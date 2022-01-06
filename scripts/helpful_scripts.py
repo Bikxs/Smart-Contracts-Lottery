@@ -1,11 +1,11 @@
-from brownie import VRFCoordinatorMock, MockV3Aggregator, LinkToken
-from brownie import accounts, config, network, Contract, interface
+from brownie import VRFCoordinatorMock, MockV3Aggregator, LinkToken, interface
+from brownie import accounts, config, network, Contract
 from web3 import Web3
 
 FORKED_LOCAL_ENVIROMENTS = ["mainnet-fork"]
 LOCAL_BLOCKCHAIN_ENVIRONMENTS = ["development", "ganache-local"]
 DECIMALS = 8
-INITIAL_VALUE = 200000000000
+INITIAL_ETH_TO_USD_RATE = 2000_0000_0000
 
 
 def get_account(index=None, id=None):
@@ -44,11 +44,11 @@ def get_contract(contract_name: str):
     return contract
 
 
-def deploy_mocks(decimals=DECIMALS, initial_value=INITIAL_VALUE):
+def deploy_mocks(decimals=DECIMALS, initial_value=INITIAL_ETH_TO_USD_RATE):
     account = get_account()
     if not MockV3Aggregator:
         print(f"\tDeploying MockV3Aggregator...")
-        MockV3Aggregator.deploy(decimals, Web3.toWei(initial_value, "ether"), {"from": account})
+        MockV3Aggregator.deploy(decimals, initial_value, {"from": account})
     if not LinkToken:
         print(f"\tDeploying LinkToken...")
         LinkToken.deploy({"from": account})

@@ -6,7 +6,7 @@ from brownie import network, config, accounts
 from scripts.helpful_scripts import get_account, get_contract, fund_with_link
 
 
-def deploy_lottery():
+def deploy_lottery() -> Lottery:
     account = get_account()
     aggregator = get_contract("eth_usd_price_feed")
     vrf_coordinator = get_contract("vrf_coordinator")

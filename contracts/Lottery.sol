@@ -28,7 +28,7 @@ contract Lottery is VRFConsumerBase, Ownable {
         uint256 _fee,
         bytes32 _keyHash)
     public VRFConsumerBase(_vrfCoordinator, _linkAddress)  {
-        usdEntryFee = 50 * (10 ** 18);
+        usdEntryFee = 50 * (10**18);
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         lottery_state = LOTTERY_STATE.CLOSED;
         fee = _fee;
@@ -47,9 +47,9 @@ contract Lottery is VRFConsumerBase, Ownable {
      */
     function getEntranceFee() public view returns (uint256) {
         (,int price,,,) = ethUsdPriceFeed.latestRoundData();
-        uint256 adjustedPrice = uint256(price) * (10 ** 10);
+        uint256 adjustedPrice = uint256(price) * 10**10;
         //now has 18 decimals
-        uint256 constToEnter = (usdEntryFee * (10 ** 18)) / adjustedPrice;
+        uint256 constToEnter = (usdEntryFee * 10**18) / adjustedPrice;
         return constToEnter;
     }
 
